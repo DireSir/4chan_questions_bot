@@ -15,7 +15,7 @@ from aiogram.filters import CommandStart
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.types import BotCommand
-from aiogram.exceptions import TelegramForbiddenError, TelegramRetryAfter, TelegramNetworkError
+from aiogram.exceptions import TelegramForbiddenError, TelegramRetryAfter, TelegramNetworkError, TelegramBadRequest
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -58,7 +58,10 @@ async def settings(message: Message) -> None:
 @dp.message(Command("question"))
 async def question(message: Message) -> None:
   question = await online.question()
-  await message.reply(question)
+  try:
+    await message.reply(question)
+  except TelegramBadRequest:
+    print("Not enough rights to send the message!")
 
 @dp.callback_query()
 async def callback_handler(callback: CallbackQuery, state: FSMContext):
@@ -153,5 +156,6 @@ running = 0
 
 if __name__ == "__main__":
   running = 1
-  logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+  # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+  print("\nBot's running")
   asyncio.run(main())
