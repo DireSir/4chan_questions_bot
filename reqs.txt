@@ -1,0 +1,7 @@
+sqlite3
+json
+asyncio
+logging
+bs4
+aiogram
+aiohttp

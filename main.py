@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import sys
 import time
 import functions
 from functions import TOKEN
