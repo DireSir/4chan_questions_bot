@@ -1,0 +1,11 @@
+{
+  "start": "a",
+  "cancel": "Cancel",
+  "settings": {
+    "main_menu": "You can change the time that passes before the bot sends a random question.",
+    "current_interval": "Current interval:",
+    "new_interval": "Respond to this message with a number (minimum 1, decimal values work) or cancel the change using the button below.",
+    "invalid_interval": "Please send a number (minutes).",
+    "interval_too_small": "The smallest value you can set is 1 minute, to prevent whatever computer I'm hosting this on from exploding."
+  }
+}

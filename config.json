@@ -1,0 +1,8 @@
+{
+  "files": {
+    "secrets_path": "SECRETS.json",
+    "dialogue_path": "dialogue.json",
+    "db_file_path": "database.db"
+  },
+  "default_interval": 3600
+}
