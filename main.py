@@ -45,6 +45,7 @@ async def command_start_handler(message: Message) -> None:
 @dp.message(Command("settings"))
 async def settings(message: Message) -> None:
   if message.chat.type == "private":
+    await message.reply(dialogue["settings"]["dms"])
     return
   data = functions.get_chat_info(message.chat.id, True)
   interval = data["interval"] / 60

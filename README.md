@@ -1,0 +1,1 @@
+erm, create "SECRETS.json" with a BOT_TOKEN key inside it. it should be a string that you get from bot father.
