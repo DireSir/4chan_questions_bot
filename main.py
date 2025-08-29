@@ -24,7 +24,7 @@ from aiogram.types import CallbackQuery
 
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
-SOCKET_PATH = "/tmp/mybot_console.sock"
+socket_path = config["socket_path"]
 running = False
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -34,17 +34,17 @@ class SettingsStates(StatesGroup):
 
 async def set_commands(bot):
   commands = [
-    BotCommand(command="settings", description="z"),
+    BotCommand(command="settings", description="Change bot's settings"),
     BotCommand(command="question", description="Get a random question"),
   ]
   await bot.set_my_commands(commands)
 
 @dp.message(CommandStart())
-async def command_start_handler(message: Message) -> None:
+async def command_start_handler(message: Message):
   await message.answer(dialogue["start"])
 
 @dp.message(Command("settings"))
-async def settings(message: Message) -> None:
+async def settings(message: Message):
   if message.chat.type == "private":
     await message.reply(dialogue["settings"]["dms"])
     return
@@ -57,7 +57,7 @@ async def settings(message: Message) -> None:
   await message.reply(text = dialogue["settings"]["main_menu"], reply_markup=keyboard)
 
 @dp.message(Command("question"))
-async def question(message: Message) -> None:
+async def question(message: Message):
   question = await online.question()
   try:
     await message.reply(question)
@@ -92,17 +92,15 @@ async def callback_handler(callback: CallbackQuery, state: FSMContext):
 
 @dp.message(SettingsStates.waiting_for_interval)
 async def interval_message_handler(message: Message, state: FSMContext):
-  if message.chat.type == "private":
-    return
-
   data = await state.get_data()
-  if data.get("requester_id") and data["requester_id"] != message.from_user.id:
+  
+  if message.chat.type == "private" or data.get("requester_id") and data["requester_id"] != message.from_user.id:
     return
 
   try:
-    text = float(message.text.strip())
-    if text >= 1:
-      interval =  text * 60
+    minutes = float(message.text.strip())
+    if minutes >= 1:
+      interval =  minutes * 60
     else:
       await message.reply(dialogue["settings"]["interval_too_small"])
       return
@@ -112,11 +110,11 @@ async def interval_message_handler(message: Message, state: FSMContext):
 
   functions.update_interval(message.chat.id, interval)
 
-  await message.reply(f"Interval updated to {interval / 60} minutes.")
+  await message.reply(f"{dialogue["settings"]["updated_interval"]} {interval / 60} {dialogue["minutes"]}.")
   await state.clear()
 
 @dp.message()
-async def message_handler(message: Message) -> None:
+async def message_handler(message: Message):
   if message.chat.type == "private":
     return
   chat_id = message.chat.id
@@ -133,7 +131,7 @@ async def _writeln(writer, text: str):
 
 async def console_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
   peer = "local"
-  addr = SOCKET_PATH
+  addr = socket_path
   try:
     while True:
       await _writeln(writer, ">>>")
@@ -218,12 +216,12 @@ async def console_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWr
 
 async def main():
   try:
-    if os.path.exists(SOCKET_PATH):
-      os.unlink(SOCKET_PATH)
+    if os.path.exists(socket_path):
+      os.unlink(socket_path)
   except Exception:
     pass
-  server = await asyncio.start_unix_server(console_handler, path=SOCKET_PATH)
-  print(f"Console socket listening at {SOCKET_PATH}")
+  server = await asyncio.start_unix_server(console_handler, path=socket_path)
+  print(f"Console socket listening at {socket_path}")
   await set_commands(bot)
   asyncio.create_task(dp.start_polling(bot))
   while running:
@@ -252,4 +250,7 @@ if __name__ == "__main__":
   running = True
   # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
   print("\nBot's running")
-  asyncio.run(main())
+  try:
+    asyncio.run(main())
+  except TelegramNetworkError:
+    print("Couldn't connect to telegram")

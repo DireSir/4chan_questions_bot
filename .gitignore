@@ -1,0 +1,16 @@
+*
+# Data
+!config.json
+!dialogue.json
+
+# Python
+!main.py
+!online.py
+!console.py
+!functions.py
+
+# Misc
+!README.txt
+!reqs.txt
+!UNLLICENSE.txt
+!.gitignore

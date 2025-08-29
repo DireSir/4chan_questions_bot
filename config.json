@@ -4,5 +4,6 @@
     "dialogue_path": "dialogue.json",
     "db_file_path": "database.db"
   },
-  "default_interval": 3600
+  "default_interval": 3600,
+  "socket_path": "/tmp/mybot_console.sock"
 }

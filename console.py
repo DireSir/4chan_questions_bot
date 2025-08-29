@@ -31,14 +31,17 @@ def interact(sock):
 
 if __name__ == "__main__":
   sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-  sock.connect(SOCKET_PATH)
   try:
-    if len(sys.argv) > 1:
-      cmd = " ".join(sys.argv[1:]) + "\n"
-      sock.sendall(cmd.encode())
-      out = sock.recv(65536)
-      print(out.decode(), end="")
-    else:
-      interact(sock)
-  finally:
-    sock.close()
+    sock.connect(SOCKET_PATH)
+    try:
+      if len(sys.argv) > 1:
+        cmd = " ".join(sys.argv[1:]) + "\n"
+        sock.sendall(cmd.encode())
+        out = sock.recv(65536)
+        print(out.decode(), end="")
+      else:
+        interact(sock)
+    finally:
+      sock.close()
+  except ConnectionRefusedError:
+    print("The bot is not running.")
