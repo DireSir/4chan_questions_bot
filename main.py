@@ -24,6 +24,8 @@ from aiogram.types import CallbackQuery
 
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+SOCKET_PATH = "/tmp/mybot_console.sock"
+running = False
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
@@ -125,7 +127,103 @@ async def message_handler(message: Message) -> None:
   else:
     functions.update_last_sent(chat_id, latest_message_time)
 
+async def _writeln(writer, text: str):
+  writer.write((text + "\n").encode())
+  await writer.drain()
+
+async def console_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+  peer = "local"
+  addr = SOCKET_PATH
+  try:
+    while True:
+      await _writeln(writer, ">>>")
+      data = await reader.readline()
+      if not data:
+        break
+      line = data.decode().strip()
+      if not line:
+        continue
+      parts = line.split()
+      cmd = parts[0].lower()
+
+      if cmd in ("quit", "exit"):
+        await _writeln(writer, "closing connection.")
+        break
+
+      if cmd == "help":
+        await _writeln(writer, "commands: help list send status stop quit")
+        continue
+
+      if cmd == "list":
+        try:
+          data = functions.get_all_chats_info(True)
+          if not data:
+            await _writeln(writer, "no chats registered.")
+            continue
+          now = time.time()
+          for c in data:
+            cid = c.get("chat_id") or c.get("chat")
+            interval_min = (c.get("interval") or 0) / 60
+            last = c.get("last_sent") or 0
+            age = int(now - last) if last else "never"
+            await _writeln(writer, f"{cid}\tinterval={interval_min}min\tlast_sent_age={age}")
+        except Exception as e:
+          await _writeln(writer, f"error listing: {e}")
+        continue
+
+      if cmd == "send":
+        if len(parts) < 3:
+          await _writeln(writer, "usage: send <chat_id> <message...>")
+          continue
+        try:
+          chat_id = int(parts[1])
+        except ValueError:
+          await _writeln(writer, "invalid chat_id")
+          continue
+        message_text = line.split(" ", 2)[2]
+        try:
+          await bot.send_message(chat_id, message_text)
+          functions.update_last_sent(chat_id, time.time())
+          await _writeln(writer, "sent")
+        except Exception as e:
+          await _writeln(writer, f"send error: {e}")
+        continue
+
+      if cmd == "stop":
+        await _writeln(writer, "stopping bot.")
+        global running
+        running = False
+        continue
+      
+      if cmd == "status":
+        try:
+          chats = functions.get_all_chats_info(True) or []
+          await _writeln(writer, f"running={bool(running)} chats={len(chats)}")
+        except Exception as e:
+          await _writeln(writer, f"status error: {e}")
+        continue
+
+      await _writeln(writer, f"unknown command: {cmd}")
+  except Exception as e:
+    try:
+      await _writeln(writer, f"console handler error: {e}")
+    except Exception:
+      pass
+  finally:
+    try:
+      writer.close()
+      await writer.wait_closed()
+    except Exception:
+      pass
+
 async def main():
+  try:
+    if os.path.exists(SOCKET_PATH):
+      os.unlink(SOCKET_PATH)
+  except Exception:
+    pass
+  server = await asyncio.start_unix_server(console_handler, path=SOCKET_PATH)
+  print(f"Console socket listening at {SOCKET_PATH}")
   await set_commands(bot)
   asyncio.create_task(dp.start_polling(bot))
   while running:
@@ -150,11 +248,8 @@ async def main():
     except TelegramNetworkError:
       print("Network issue, retrying later")
 
-
-running = 0
-
 if __name__ == "__main__":
-  running = 1
+  running = True
   # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
   print("\nBot's running")
   asyncio.run(main())
