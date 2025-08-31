@@ -1,10 +1,11 @@
 import socket
 import sys
 import os
+from functions import config
 
-SOCKET_PATH = "/tmp/mybot_console.sock"
-if not os.path.exists(SOCKET_PATH):
-  print("socket not found:", SOCKET_PATH)
+socket_path = config["socket_path"]
+if not os.path.exists(socket_path):
+  print("socket not found:", socket_path)
   sys.exit(1)
 
 def interact(sock):
@@ -19,20 +20,21 @@ def interact(sock):
         break
       if not line:
         continue
-      sock.sendall((line + "\n").encode())
-      resp = sock.recv(65536)
-      if not resp:
-        break
-      print(resp.decode(), end="")
-      if line.lower() in ("quit", "exit"):
-        break
+      try:
+        sock.sendall((line + "\n").encode())
+        resp = sock.recv(65536)
+        print(resp.decode(), end="")
+        if line.lower() in ("quit", "exit", "stop"):
+          break
+      except BrokenPipeError:
+        print(f"{BrokenPipeError}, The bot is not running.")
   except KeyboardInterrupt:
     pass
 
 if __name__ == "__main__":
   sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
   try:
-    sock.connect(SOCKET_PATH)
+    sock.connect(socket_path)
     try:
       if len(sys.argv) > 1:
         cmd = " ".join(sys.argv[1:]) + "\n"
