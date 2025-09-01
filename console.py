@@ -20,13 +20,14 @@ def interact(sock):
         break
       if not line:
         continue
-      sock.sendall((line + "\n").encode())
-      resp = sock.recv(65536)
-      if not resp:
-        break
-      print(resp.decode(), end="")
-      if line.lower() in ("quit", "exit"):
-        break
+      try:
+        sock.sendall((line + "\n").encode())
+        resp = sock.recv(65536)
+        print(resp.decode(), end="")
+        if line.lower() in ("quit", "exit", "stop"):
+          break
+      except BrokenPipeError:
+        print(f"{BrokenPipeError}, The bot is not running.")
   except KeyboardInterrupt:
     pass
 

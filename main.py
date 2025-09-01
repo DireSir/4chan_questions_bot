@@ -35,7 +35,6 @@ async def set_commands(bot):
     BotCommand(command="settings", description="Change bot's settings"),
     BotCommand(command="question", description="Get a random question"),
   ]
-  await bot.set_my_commands(commands)
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message):
@@ -169,8 +168,15 @@ async def console_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWr
         break
 
       if cmd == "help":
-        await _writeln(writer, "commands: help list send status stop quit")
+        await _writeln(writer, "commands: help list send status stop quit update_commands")
         continue
+
+      if cmd == "update_commands":
+        try:
+          await bot.set_my_commands(commands)
+          await _writeln(writer, "succssesfully updated bot's commands")
+        except Exception:
+          await _writeln(writer, f"could not updated bot's commands, {Exception}")
 
       if cmd == "list":
         try:
@@ -262,7 +268,7 @@ async def main():
       print(f"Removed chat {chat_id}")
     except TelegramRetryAfter as e:
       print(f"Flood limit, retry after {e.timeout} seconds")
-      await asyncio.sleep(e.timeout)
+      await asyncio.sleep(e.timeout + 2)
     except TelegramNetworkError:
       print("Network issue, retrying later")
 
