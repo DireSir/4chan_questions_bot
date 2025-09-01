@@ -1,19 +1,21 @@
-import json
 import html
 import aiohttp
-import asyncio
 import re
 import random
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
+import warnings
 
-async def fetch_a_4chan_json(board: str):
+warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
+
+async def fetch_a_4chan_json(board: str) -> list:
   url = f"https://a.4cdn.org/{board}/catalog.json"
+  print(url)
   async with aiohttp.ClientSession() as session:
     async with session.get(url) as resp:
       data = await resp.json()
       return data
 
-def extract_questions(raw_html: str):
+def extract_questions(raw_html: str) -> dict:
   soup = BeautifulSoup(raw_html, "html.parser")
 
   for br in soup.find_all("br"):
@@ -29,7 +31,7 @@ def extract_questions(raw_html: str):
 
   return questions
 
-async def get_a_question(data) -> str:
+async def get_a_question(data) -> str | bool:
   all_questions = []
   for page in data:
     for thread in page.get("threads", []):
@@ -40,14 +42,14 @@ async def get_a_question(data) -> str:
         text = reply.get("com", "")
         if text:
           all_questions.extend(extract_questions(text))
-    if all_questions:
-      break
 
   if all_questions:
     return random.choice(all_questions)
   return None
 
-async def question():
-  data = await fetch_a_4chan_json("pol")
+async def question(boards):
+  board = random.choice(boards)
+  print(f"\n\n{board}\n\n")
+  data = await fetch_a_4chan_json(board)
   question = await get_a_question(data)
   return question

@@ -3,12 +3,14 @@
   "cancel": "Cancel",
   "minutes": "minute(s)",
   "settings": {
-    "main_menu": "You can change the time that passes before the bot sends a random question.",
+    "main_menu": "You can change the time that passes before the bot sends a random question, and from what boards the bot gets its questions.",
     "current_interval": "Current interval:",
     "new_interval": "Respond to this message with a number (minimum 1, decimal values work) or cancel the change using the button below.",
     "invalid_interval": "Please send a number (minutes).",
     "interval_too_small": "The smallest value you can set is 1 minute, to prevent whatever computer I'm hosting this on from exploding.",
     "dms": "What are you gonna change the settings of? These DMs? Why'd you want a bot to spam you? Just go to 4chan if you want to read it that bad.",
-    "updated_interval": "Interval updated to"
+    "updated_interval": "Interval updated to",
+    "current_boards": "Current boards:",
+    "change_boards": "The boards below are the most interesting and active ones. Personally, I didn't see why you'd want to include other "
   }
 }

@@ -5,5 +5,7 @@
     "db_file_path": "database.db"
   },
   "default_interval": 3600,
-  "socket_path": "/tmp/mybot_console.sock"
+  "socket_path": "/tmp/mybot_console.sock",
+  "all_boards": ["pol", "g"],
+  "default_boards": ["pol", "vst", "sci"]
 }
