@@ -29,13 +29,17 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 class SettingsStates(StatesGroup):
   waiting_for_interval = State()
 
-async def set_commands(bot):
+async def set_commands(bot) -> None | Exception:
   commands = [
     BotCommand(command="start", description="Print some bot info"),
     BotCommand(command="settings", description="Change bot's settings"),
     BotCommand(command="question", description="Get a random question"),
   ]
-
+  try:
+    await bot.set_my_commands(commands)
+  except Exception:
+    return Exception
+    
 @dp.message(CommandStart())
 async def command_start_handler(message: Message):
   await message.answer(dialogue["start"])
@@ -172,11 +176,10 @@ async def console_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWr
         continue
 
       if cmd == "update_commands":
-        try:
-          await bot.set_my_commands(commands)
-          await _writeln(writer, "succssesfully updated bot's commands")
-        except Exception:
+        if set_commands() == Exception: 
           await _writeln(writer, f"could not updated bot's commands, {Exception}")
+        else:
+          await _writeln(writer, "succssesfully updated bot's commands")
 
       if cmd == "list":
         try:
@@ -241,14 +244,13 @@ async def console_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWr
       pass
 
 async def main():
-  try:
-    if os.path.exists(socket_path):
+  if os.path.exists(socket_path):
+    try:
       os.unlink(socket_path)
-  except Exception:
-    pass
+    except Exception as e:
+      print({e})
   # server = await asyncio.start_unix_server(console_handler, path=socket_path)
   print(f"Console socket listening at {socket_path}")
-  await set_commands(bot)
   asyncio.create_task(dp.start_polling(bot))
   while running:
     try:
@@ -271,6 +273,7 @@ async def main():
       await asyncio.sleep(e.timeout + 2)
     except TelegramNetworkError:
       print("Network issue, retrying later")
+      await asyncio.sleep(5)
 
 if __name__ == "__main__":
   running = True

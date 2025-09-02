@@ -6,6 +6,6 @@
   },
   "default_interval": 3600,
   "socket_path": "/tmp/mybot_console.sock",
-  "all_boards": ["pol", "g"],
+  "all_boards": ["pol", "g", "vst", "sci", "b", "r9k"],
   "default_boards": ["pol", "vst", "sci"]
 }

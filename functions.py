@@ -89,6 +89,7 @@ def get_all_chats_info(serialise = False) -> tuple | list:
         if "boards" in row_dict and isinstance(row_dict["boards"], str):
           row_dict["boards"] = [b.strip(" '") for b in row_dict["boards"].strip("[]").split(",")]
         data.append(row_dict)
+      print(data) # Remove this ~~in production~~
     return data
   
   except Exception as e:
